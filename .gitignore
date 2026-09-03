@@ -1,0 +1,22 @@
+# --- Datos personales: NUNCA deben publicarse -----------------------------
+# El log guarda fichajes reales, numero de tarjeta, balances y motivos de ausencia.
+sync-horario.log
+*.log
+ultimo-resultado.txt
+
+# Configuracion local: rutas del usuario y URL interna del portal de fichajes.
+configuracion.json
+
+# --- Libros de Excel ------------------------------------------------------
+# Contienen el horario real. El repositorio solo publica el codigo.
+*.xlsx
+*.xlsm
+*.xlsb
+~$*
+
+# Copias de seguridad que genera el propio script
+_backups_horario/
+
+# --- Sistema --------------------------------------------------------------
+Thumbs.db
+desktop.ini

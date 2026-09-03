@@ -1,0 +1,9 @@
+{
+    "RutaLibro": "C:\\Users\\TU_USUARIO\\Desktop\\Copia de horario 2026.xlsm",
+    "UrlIntranet": "https://intranet.empresa.local/RRHH/Fichajes.aspx?Tab=4",
+    "MaxBackups": 30,
+    "JornadaVerano": "7:00",
+    "JornadaInvierno": "7:43",
+    "VeranoDesde": "15-06",
+    "VeranoHasta": "15-09"
+}

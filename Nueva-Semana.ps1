@@ -9,8 +9,7 @@
       * Nombre de la hoja "dd-MM-aa a dd-MM-aa".
       * Fichajes de los cinco dias VACIOS (no arrastra los de la semana anterior).
       * Etiquetas de los dias con su fecha correcta, respetando como los escribe el libro.
-      * Mes de la cabecera segun la MAYORIA de dias laborables, asi que una semana a caballo
-        entre dos meses queda bien (la del 31-08 al 04-09 es septiembre).
+      * Mes de la cabecera segun la MAYORIA de dias laborables.
       * Jornada (C4) segun la epoca: 7:00 en verano, 7:43 el resto del anio.
       * "Renta semana" (C5) tomada del viernes de la semana anterior.
 

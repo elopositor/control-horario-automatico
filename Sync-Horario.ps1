@@ -58,7 +58,10 @@ param(
     # Una pausa de hasta estos minutos es el descanso (el cafe, normalmente sobre las 11h);
     # mas larga que eso, se considera la comida. Se distingue por DURACION y no por la hora
     # del dia, que clasificaria mal una comida temprana.
-    [int]    $MaxMinutosDescanso = 60
+    [int]    $MaxMinutosDescanso = 60,
+    # Hora a partir de la cual una pausa larga puede ser la comida. Una pausa larga anterior
+    # (una gestion de primera hora, el medico) no se registra: no es ni cafe ni comida.
+    [int]    $HoraMinimaComida = 12
 )
 
 $ErrorActionPreference = 'Stop'
@@ -547,13 +550,8 @@ function New-HojaSemana {
     # Jornada oficial: 7:00 en verano (15-jun a 15-sep) y 7:43 el resto del anio. Se pone aqui
     # porque al copiar la semana anterior se heredaria la jornada vieja, y en la semana del
     # cambio eso descuadraria toda la hoja.
-    $cuenta = @{}
-    for ($d = 0; $d -lt 5; $d++) {
-        $j = Get-JornadaOficial -Fecha $Lunes.AddDays($d) -Config $script:Cfg
-        if (-not $cuenta.ContainsKey($j)) { $cuenta[$j] = 0 }
-        $cuenta[$j]++
-    }
-    $jornada = ($cuenta.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
+    $info    = Get-JornadaSemana -Lunes $Lunes
+    $jornada = $info.Jornada
     $tj = [timespan]::FromDays([double]$jornada)
     $textoJ = '{0}:{1:00}' -f [Math]::Floor($tj.TotalHours), $tj.Minutes
 
@@ -562,7 +560,7 @@ function New-HojaSemana {
         Set-Valor -Celda $nueva.Range('C4') -Valor ([double]$jornada)
         Write-Log "Jornada de la hoja nueva ajustada a $textoJ (la heredada no correspondia a estas fechas)."
     }
-    if ($cuenta.Count -gt 1) {
+    if ($info.Mixta) {
         Write-Log "La semana del $($Lunes.ToString('dd-MM-yyyy')) cae sobre el cambio de jornada de verano: se ha puesto $textoJ, que es la de la mayoria de sus dias. REVISALA." 'AVISO'
     }
 
@@ -592,6 +590,26 @@ function Set-CeldaHora {
 
     if (-not $ModoPrueba) { Set-Valor -Celda $celda -Valor $nuevo }
     return $true
+}
+
+function Get-JornadaSemana {
+    <#
+        Jornada que corresponde a una semana: la de la MAYORIA de sus dias laborables.
+        La semana del cambio de horario de verano tiene dias de los dos regimenes, y mirar
+        solo el lunes daba por incorrecta una hoja que estaba bien.
+    #>
+    param([datetime]$Lunes)
+
+    $cuenta = @{}
+    for ($d = 0; $d -lt 5; $d++) {
+        $j = Get-JornadaOficial -Fecha $Lunes.AddDays($d) -Config $script:Cfg
+        if (-not $cuenta.ContainsKey($j)) { $cuenta[$j] = 0 }
+        $cuenta[$j]++
+    }
+    return @{
+        Jornada = ($cuenta.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
+        Mixta   = ($cuenta.Count -gt 1)
+    }
 }
 
 function Set-Ausencia {
@@ -740,11 +758,24 @@ function Update-Semana {
         $tiposUsados = @()
 
         for ($k = 1; $k -lt $limite; $k += 2) {
-            # Es la duracion, no la hora, la que dice si fue el cafe o la comida.
-            $duracion = ((ConvertTo-FraccionDia $marcas[$k + 1]) - (ConvertTo-FraccionDia $marcas[$k])) * 1440
+            $inicio   = ConvertTo-FraccionDia $marcas[$k]
+            $duracion = ((ConvertTo-FraccionDia $marcas[$k + 1]) - $inicio) * 1440
 
-            if ($duracion -le $MaxMinutosDescanso) { $filaSal = $base + 2; $tipo = 'desayuno' }
-            else                                   { $filaSal = $base + 4; $tipo = 'comida'   }
+            # Corta -> el cafe, a la hora que sea.
+            # Larga -> la comida, PERO solo si empieza ya entrada la jornada: una ausencia
+            # larga de primera hora (una gestion, el medico) no es la comida, y tomarla por
+            # tal machacaba la comida de verdad que venia despues.
+            if ($duracion -le $MaxMinutosDescanso) {
+                $filaSal = $base + 2; $tipo = 'desayuno'
+            }
+            elseif ($inicio -ge ($HoraMinimaComida / 24.0)) {
+                $filaSal = $base + 4; $tipo = 'comida'
+            }
+            else {
+                Write-Log ("{0}: la pausa de {1} a {2} ({3} min) es demasiado larga para un descanso y demasiado temprana para la comida. No se registra; anotala a mano si procede." -f `
+                    $etiquetaDia, $marcas[$k], $marcas[$k + 1], [int]$duracion) 'AVISO'
+                continue
+            }
 
             if ($tiposUsados -contains $tipo) {
                 Write-Log "$etiquetaDia tiene mas de una pausa de $tipo ($($marcas -join ', ')); solo cabe una en la hoja, revisala." 'AVISO'
@@ -942,7 +973,7 @@ try {
         }
         # Aviso (sin tocar nada) si la jornada de una hoja ya existente no corresponde a sus
         # fechas: pasa en la semana del cambio de horario de verano.
-        $jEsperada = Get-JornadaOficial -Fecha $l -Config $script:Cfg
+        $jEsperada = (Get-JornadaSemana -Lunes $l).Jornada
         $jHoja     = $hoja.Range('C4').Value2
         if ($jHoja -is [double] -and [Math]::Abs([double]$jHoja - [double]$jEsperada) -ge (0.5/1440.0)) {
             $te = [timespan]::FromDays([double]$jEsperada); $th = [timespan]::FromDays([double]$jHoja)

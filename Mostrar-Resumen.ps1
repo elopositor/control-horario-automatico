@@ -231,18 +231,27 @@ function Get-Resumen {
     # Si alguna pausa se ha pasado de la cortesia, se dice cuanto retrasa la salida.
     # El umbral de medio minuto evita que aparezca "0:00" por residuos de coma flotante:
     # una pausa de exactamente 15 min deja en G un valor del orden de 1e-17, no cero.
+    # Cada pausa con SU propio descuento. Antes se mostraban las horas del cafe junto al
+    # descuento TOTAL (cafe + comida), y un cafe de 16 min aparecia retrasando la salida 1:35.
     $minimoVisible = 0.5 / 1440.0
-    if ($descuentos -gt $minimoVisible) {
-        $desde = $hoja.Cells.Item($base + 2, 3).Value2
-        $hasta = $hoja.Cells.Item($base + 3, 3).Value2
-        if ($descDes -is [double] -and $descDes -gt $minimoVisible -and $desde -is [double] -and $hasta -is [double]) {
-            $lineas += "Café $(Format-Hora ([double]$desde))-$(Format-Hora ([double]$hasta)): retrasa la salida $(Format-Horas $descuentos)"
-            $cortas += "Café $(Format-Hora ([double]$desde))-$(Format-Hora ([double]$hasta)) → +$(Format-Horas $descuentos)"
-        } else {
-            $lineas += "Pausas: retrasan la salida $(Format-Horas $descuentos)"
-            $cortas += "Pausas → +$(Format-Horas $descuentos)"
+    $breves = @()
+
+    foreach ($p in @(
+        @{ Nombre = 'Café';   Desc = $descDes; Fila = $base + 2 },
+        @{ Nombre = 'Comida'; Desc = $descCom; Fila = $base + 4 }
+    )) {
+        if ($p.Desc -isnot [double] -or [double]$p.Desc -le $minimoVisible) { continue }
+
+        $ini = $hoja.Cells.Item($p.Fila, 3).Value2
+        $fin = $hoja.Cells.Item($p.Fila + 1, 3).Value2
+        $franja = ''
+        if ($ini -is [double] -and $fin -is [double]) {
+            $franja = " $(Format-Hora ([double]$ini))-$(Format-Hora ([double]$fin))"
         }
+        $lineas += "$($p.Nombre)$($franja): retrasa la salida $(Format-Horas ([double]$p.Desc))"
+        $breves += "$($p.Nombre) +$(Format-Horas ([double]$p.Desc))"
     }
+    if ($breves.Count -gt 0) { $cortas += ($breves -join ' · ') }
 
     # Para un dia que no es hoy, se considera cerrado a todos los efectos.
     $ahora = if ($hoy -eq (Get-Date).Date) { ((Get-Date) - (Get-Date).Date).TotalDays } else { 1.0 }

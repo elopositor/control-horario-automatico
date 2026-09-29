@@ -109,16 +109,24 @@ Los fichajes van **en pares** entrada/salida:
 - **Número impar** → sigues dentro, y la última marca es una **vuelta de pausa**, no la salida.
   Tomarla por salida machacaría la hora prevista con la del café.
 
-Las parejas intermedias son pausas, y se clasifican **por duración, no por la hora**:
+Las parejas intermedias son pausas, y se clasifican así:
 
-| Duración | Va a |
+| Pausa | Va a |
 |---|---|
-| hasta 60 min (`-MaxMinutosDescanso`) | Salida/Entrada **desayuno** — el café |
-| más de 60 min | Salida/Entrada **comida** |
+| Hasta 60 min (`-MaxMinutosDescanso`), a la hora que sea | Salida/Entrada **desayuno**, el café |
+| Más de 60 min y empieza a las 12:00 o después (`-HoraMinimaComida`) | Salida/Entrada **comida** |
+| Más de 60 min pero **antes** de esa hora | No se registra, solo se avisa |
 
-Por duración y no por hora del día porque una comida temprana (12:30 a 13:50) se clasificaría
-mal con un corte horario. Si un día aparecen dos pausas del mismo tipo, se avisa: en la hoja
-solo cabe una de cada.
+El café va por duración y no por hora del día porque una comida temprana (12:30 a 13:50) se
+clasificaría mal con un corte horario.
+
+La comida, en cambio, necesita además la hora: una ausencia larga de primera hora (una gestión,
+el médico) no es la comida. El 24-09-2026 hubo una pausa de 08:25 a 13:13 y, al tomarse por
+comida, machacó la de verdad, que fue de 15:06 a 16:40. Esa pausa temprana no se anota en
+ninguna parte -sólo caben un café y una comida por día-, así que si hay que descontarla se hace
+a mano.
+
+Si un día aparecen dos pausas del mismo tipo se avisa y se queda la primera.
 
 El descuento lo calcula el propio libro: los primeros 15 minutos de pausa (`K3`) son de
 cortesía y no restan; solo cuenta el exceso. Un café de 30 minutos retrasa la salida 15.
@@ -312,6 +320,10 @@ objetivos de toda la hoja. Por eso:
   ahí mandan tus valores.
 - **La semana del cambio** (el 15-09-2026 cae en martes, así que la del 14 tiene días de los dos
   regímenes) se pone la jornada de la mayoría de sus días y **se avisa para que la revises**.
+
+La jornada de una semana es siempre la de la **mayoría de sus días laborables**, nunca la del
+lunes. Mirando sólo el lunes, la semana del 14-09-2026 salía como de verano (7:00) y el aviso
+daba por incorrecta una hoja que estaba bien puesta a 7:43.
 
 ## La hoja de cada semana se crea sola
 

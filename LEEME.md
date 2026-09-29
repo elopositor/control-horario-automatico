@@ -115,16 +115,17 @@ Las parejas intermedias son pausas, y se clasifican así:
 |---|---|
 | Hasta 60 min (`-MaxMinutosDescanso`), a la hora que sea | Salida/Entrada **desayuno**, el café |
 | Más de 60 min y empieza a las 12:00 o después (`-HoraMinimaComida`) | Salida/Entrada **comida** |
-| Más de 60 min pero **antes** de esa hora | No se registra, solo se avisa |
+| Más de 60 min pero **antes** de esa hora | No se descuenta, solo se avisa |
 
 El café va por duración y no por hora del día porque una comida temprana (12:30 a 13:50) se
 clasificaría mal con un corte horario.
 
-La comida, en cambio, necesita además la hora: una ausencia larga de primera hora (una gestión,
-el médico) no es la comida. El 24-09-2026 hubo una pausa de 08:25 a 13:13 y, al tomarse por
-comida, machacó la de verdad, que fue de 15:06 a 16:40. Esa pausa temprana no se anota en
-ninguna parte -sólo caben un café y una comida por día-, así que si hay que descontarla se hace
-a mano.
+La comida, en cambio, necesita además la hora. Un hueco largo de primera hora suele ser una
+**ausencia por trabajo**: se sale de la oficina, se ficha al salir y al volver, y se justifica
+con una incidencia. Ese tiempo **se ha trabajado**, así que no se descuenta.
+
+El 24-09-2026 hubo un hueco de 08:25 a 13:13 por ese motivo y, al tomarse por comida, machacó
+la de verdad, que fue de 15:06 a 16:40.
 
 Si un día aparecen dos pausas del mismo tipo se avisa y se queda la primera.
 

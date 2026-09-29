@@ -762,9 +762,11 @@ function Update-Semana {
             $duracion = ((ConvertTo-FraccionDia $marcas[$k + 1]) - $inicio) * 1440
 
             # Corta -> el cafe, a la hora que sea.
-            # Larga -> la comida, PERO solo si empieza ya entrada la jornada: una ausencia
-            # larga de primera hora (una gestion, el medico) no es la comida, y tomarla por
-            # tal machacaba la comida de verdad que venia despues.
+            # Larga -> la comida, PERO solo si empieza ya entrada la jornada.
+            # Un hueco largo de primera hora suele ser una AUSENCIA POR TRABAJO (se sale de la
+            # oficina, se ficha y se justifica con una incidencia): ese tiempo SI se ha
+            # trabajado, asi que no se descuenta. Tomarlo por comida ademas machacaba la
+            # comida de verdad que venia despues.
             if ($duracion -le $MaxMinutosDescanso) {
                 $filaSal = $base + 2; $tipo = 'desayuno'
             }
@@ -772,7 +774,7 @@ function Update-Semana {
                 $filaSal = $base + 4; $tipo = 'comida'
             }
             else {
-                Write-Log ("{0}: la pausa de {1} a {2} ({3} min) es demasiado larga para un descanso y demasiado temprana para la comida. No se registra; anotala a mano si procede." -f `
+                Write-Log ("{0}: hueco de {1} a {2} ({3} min), demasiado temprano para ser la comida. NO se descuenta: normalmente es una ausencia por trabajo, que se ficha y se justifica con una incidencia." -f `
                     $etiquetaDia, $marcas[$k], $marcas[$k + 1], [int]$duracion) 'AVISO'
                 continue
             }
